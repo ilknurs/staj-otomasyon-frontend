@@ -1,30 +1,15 @@
+// Login.js
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  TextField, 
-  Button, 
-  Typography, 
-  Alert,
-  Container 
-} from '@mui/material';
-import { authAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const Login = ({ onLogin }) => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const [error, setError] = useState('');
+  
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,81 +17,88 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await authAPI.login(formData);
-      const { token, user } = response.data;
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password
+      });
+
+      // Token'ı localStorage'a kaydet
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data));
+
+      // Role'e göre yönlendirme
+      const userRole = response.data.role;
       
-      // Token ve user bilgilerini kaydet
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      onLogin(user);
-    } catch (err) {
-      console.log('Login error:', err);
-      setError(err.response?.data?.message || 'Giriş başarısız');
+      switch(userRole) {
+        case 'student':
+          navigate('/student-dashboard');
+          break;
+        case 'company':
+          navigate('/company-dashboard');
+          break;
+        case 'supervisor':
+          navigate('/supervisor-dashboard');
+          break;
+        case 'admin':
+          navigate('/admin-dashboard');
+          break;
+        default:
+          navigate('/dashboard'); // varsayılan sayfa
+      }
+
+      console.log('Login successful, redirecting to:', userRole, 'dashboard');
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(
+        error.response?.data?.message || 
+        'Giriş yapılırken bir hata oluştu'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Card sx={{ width: '100%', maxWidth: 400 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" align="center" gutterBottom color="primary">
-              Staj Yönetim Sistemi
-            </Typography>
-            <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
-              Giriş yapın
-            </Typography>
-            
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            
-            <form onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                name="email"
-                label="E-mail"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                margin="normal"
-                required
-                variant="outlined"
-              />
-              
-              <TextField
-                fullWidth
-                name="password"
-                label="Şifre"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                margin="normal"
-                required
-                variant="outlined"
-              />
-              
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2, py: 1.5 }}
-                disabled={loading}
-                size="large"
-              >
-                {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </Box>
-    </Container>
+    <div className="login-container">
+      <div className="login-form">
+        <h2>Giriş Yap</h2>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="email">Email:</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="password">Şifre:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <button type="submit" disabled={loading}>
+            {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 
