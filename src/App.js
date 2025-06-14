@@ -1,66 +1,97 @@
-// App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import StudentDashboard from './components/StudentDashboard.js';
-import CompanyDashboard from './components/CompanyDashboard';
-import SupervisorDashboard from './components/SupervisorDashboard';
-import AdminDashboard from './components/AdminDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
+// Auth & Layout
+import Register from './components/auth/Register';
+import Login from './components/auth/Login';
+import AdminDashboard from './components/dashboard/AdminDashboard';
+import StudentDashboard from './components/dashboard/StudentDashboard';
+import CompanyDashboard from './components/dashboard/CompanyDashboard';
+import SupervisorDashboard from './components/dashboard/SupervisorDashboard';
+import DepartmentDashboard from './components/dashboard/DepartmentDashboard';
+
+
+// Theme
+const theme = createTheme({
+  palette: {
+    primary:   { main: '#1976d2' },
+    secondary: { main: '#dc004e' },
+  },
+});
+
+// Tek satırda token+role kontrolü
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const token    = localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
+
+  if (!token)                           return <Navigate to="/login" replace />;
+  if (requiredRole && userRole !== requiredRole)
+                                        return <Navigate to="/login" replace />;
+  return children;
+};
 
 function App() {
   return (
-    <Router>
-      <div className="App">
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* Public */}
+          <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login"    element={<Login />} />
           
-          {/* Protected Routes - Role-based */}
-          <Route 
-            path="/student-dashboard" 
-            element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/company-dashboard" 
-            element={
-              <ProtectedRoute allowedRoles={['company']}>
-                <CompanyDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/supervisor-dashboard" 
-            element={
-              <ProtectedRoute allowedRoles={['supervisor']}>
-                <SupervisorDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
+
+          {/* Protected */}
           <Route 
             path="/admin-dashboard" 
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute requiredRole="admin">
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          {/* Default redirect */}
+          <Route 
+            path="/student-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="student">
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/company-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="company">
+                <CompanyDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/supervisor-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="supervisor">
+                <SupervisorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/department-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="department">
+                <DepartmentDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default & Catch-all */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-          
-          {/* 404 - Page not found */}
-          <Route path="*" element={<div>Sayfa bulunamadı</div>} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </div>
-    </Router>
+      </Router>
+    </ThemeProvider>
   );
 }
 

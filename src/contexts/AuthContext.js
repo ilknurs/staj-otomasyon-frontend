@@ -1,147 +1,131 @@
 // src/contexts/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import authService from '../services/authService';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
+const initialState = {
+  user: null,
+  isAuthenticated: false,
+  loading: true,
+  error: null,
+};
+
+function authReducer(state, action) {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return { ...state, loading: true, error: null };
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        isAuthenticated: true,
+        loading: false,
+        error: null,
+      };
+    case 'LOGIN_FAILURE':
+      return {
+        ...state,
+        user: null,
+        isAuthenticated: false,
+        loading: false,
+        error: action.payload,
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        isAuthenticated: false,
+        loading: false,
+        error: null,
+      };
+    case 'LOAD_USER':
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: true,
+        loading: false,
+      };
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
+    default:
+      return state;
+  }
+}
+
+export function AuthProvider({ children }) {
+  const [state, dispatch] = useReducer(authReducer, initialState);
+
+  useEffect(() => {
+    // Uygulama başladığında token kontrolü
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      dispatch({ type: 'LOAD_USER', payload: JSON.parse(user) });
+    } else {
+      dispatch({ type: 'LOGOUT' });
+    }
+  }, []);
+
+  const login = async (credentials) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      const response = await authService.login(credentials);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: response });
+      return response;
+    } catch (error) {
+      dispatch({ type: 'LOGIN_FAILURE', payload: error.message || 'Giriş yapılırken hata oluştu' });
+      throw error;
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      const response = await authService.register(userData);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: response });
+      return response;
+    } catch (error) {
+      dispatch({ type: 'LOGIN_FAILURE', payload: error.message || 'Kayıt olurken hata oluştu' });
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      dispatch({ type: 'LOGOUT' });
+    }
+  };
+
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  const hasRole = (role) => {
+    return state.user?.role === role;
+  };
+
+  const value = {
+    ...state,
+    login,
+    register,
+    logout,
+    clearError,
+    hasRole,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Token doğrulama - GEÇİCİ OLARAK KAPATILDI
-  const validateToken = async (token) => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/auth/verify', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data.valid;
-    } catch (error) {
-      console.log('Token validation endpoint not available:', error.message);
-      // Endpoint yoksa token'ı geçerli kabul et (geçici çözüm)
-      return true;
-    }
-  };
-
-  // Login
-  const login = async (email, password) => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
-      });
-
-      const { token, ...userData } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      setUser(userData);
-      return { success: true, role: userData.role };
-      
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Giriş yapılırken bir hata oluştu';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setError('');
-  };
-
-  // Token kontrolü - DÜZELTİLDİ
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const userString = localStorage.getItem('user');
-        
-        if (token && userString) {
-          // Token validation'ı geçici olarak kaldırdık
-          // const isValid = await validateToken(token);
-          
-          // Geçici olarak her zaman valid kabul et
-          const isValid = true;
-          
-          if (isValid) {
-            try {
-              const userData = JSON.parse(userString);
-              setUser(userData);
-            } catch (error) {
-              console.error('User data parse error:', error);
-              logout();
-            }
-          } else {
-            logout();
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-  }, []); // Empty dependency array - sadece mount'ta çalışır
-
-  // Axios interceptors - DÜZELTİLDİ
-  useEffect(() => {
-    const requestInterceptor = axios.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    const responseInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          logout();
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    // Cleanup interceptors
-    return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-      axios.interceptors.response.eject(responseInterceptor);
-    };
-  }, []); // Empty dependency array - sadece mount'ta çalışır
-
-  const value = {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    isAuthenticated: !!user
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+}
