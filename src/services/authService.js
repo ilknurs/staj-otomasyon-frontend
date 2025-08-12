@@ -1,95 +1,97 @@
 // src/services/authService.js
 import api from './api';
 
-class AuthService {
-  // Kullanıcı kayıt
-  async register(userData) {
+const authService = {
+  // Giriş yapma
+  login: async (credentials) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      console.error('Login service error:', error);
+      throw error;
+    }
+  },
+
+  // Kayıt olma
+  register: async (userData) => {
     try {
       const response = await api.post('/auth/register', userData);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      console.error('Register service error:', error);
+      throw error;
     }
-  }
+  },
 
-  // Kullanıcı giriş
-  async login(credentials) {
+  // Çıkış yapma
+  logout: async () => {
     try {
-      const response = await api.post('/auth/login', credentials);
-      
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      const token = localStorage.getItem('token');
+      if (token) {
+        await api.post('/auth/logout');
       }
-      
-      return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  }
-
-  // Kullanıcı çıkış
-  async logout() {
-    try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout service error:', error);
+      // Logout hatası önemli değil, localStorage'ı temizleyeceğiz
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('userRole');
     }
-  }
+  },
 
-  // Profil bilgisi alma
-  async getProfile() {
+  // Profil bilgilerini getir (geçici olarak devre dışı)
+  getProfile: async () => {
     try {
-      const response = await api.get('/auth/profile');
+      // Önce localStorage'dan dene
+      const user = localStorage.getItem('user');
+      if (user) {
+        return { data: JSON.parse(user) };
+      }
+      
+      // API çağrısı (eğer endpoint varsa)
+      // const response = await api.get('/auth/profile');
+      // return response.data;
+      
+      throw new Error('Profil bilgileri bulunamadı');
+    } catch (error) {
+      console.error('Get profile service error:', error);
+      // Hata durumunda localStorage'dan bilgileri döndür
+      const user = localStorage.getItem('user');
+      if (user) {
+        return { data: JSON.parse(user) };
+      }
+      throw error;
+    }
+  },
+
+  // Token doğrulama
+  validateToken: async () => {
+    try {
+      const response = await api.get('/auth/validate');
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      console.error('Token validation error:', error);
+      throw error;
     }
-  }
+  },
 
-  // Şifre sıfırlama isteği
-  async forgotPassword(email) {
+  // Profil güncelleme
+  updateProfile: async (userData) => {
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.put('/auth/profile', userData);
+      
+      // Başarılı güncelleme sonrası localStorage'ı güncelle
+      const updatedUser = response.data.user;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
       return response.data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      console.error('Update profile service error:', error);
+      throw error;
     }
   }
+};
 
-  // Şifre sıfırlama
-  async resetPassword(token, newPassword) {
-    try {
-      const response = await api.post('/auth/reset-password', {
-        token,
-        password: newPassword
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  }
-
-  // Token kontrol
-  isAuthenticated() {
-    const token = localStorage.getItem('token');
-    return !!token;
-  }
-
-  // Kullanıcı bilgisi alma
-  getCurrentUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  }
-
-  // Kullanıcı rolü kontrol
-  hasRole(role) {
-    const user = this.getCurrentUser();
-    return user?.role === role;
-  }
-}
-
-export default new AuthService();
+export default authService;

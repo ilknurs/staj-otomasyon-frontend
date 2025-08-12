@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
+import axios from '../utils/axiosConfig';
 
 const AuthContext = createContext();
 
@@ -46,6 +47,8 @@ function authReducer(state, action) {
         isAuthenticated: true,
         loading: false,
       };
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
     case 'CLEAR_ERROR':
       return { ...state, error: null };
     default:
@@ -58,24 +61,83 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Uygulama başladığında token kontrolü
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-      dispatch({ type: 'LOAD_USER', payload: JSON.parse(user) });
-    } else {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        
+        // Token'ı axios header'ına ekle
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Token geçerliliğini kontrol et
+        const isValid = await validateToken(token);
+        
+        if (isValid) {
+          dispatch({ 
+            type: 'LOAD_USER', 
+            payload: { ...user, role: userRole || user.role } 
+          });
+        } else {
+          // Token geçersizse temizle
+          clearAuthData();
+          dispatch({ type: 'LOGOUT' });
+        }
+      } else {
+        // Token yoksa header'ı temizle
+        delete axios.defaults.headers.common['Authorization'];
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      clearAuthData();
       dispatch({ type: 'LOGOUT' });
     }
-  }, []);
+  };
+
+  const validateToken = async (token) => {
+    try {
+      // Token'ı backend'e göndererek geçerliliğini kontrol et
+      const response = await axios.get('/api/auth/validate');
+      return response.status === 200;
+    } catch (error) {
+      console.error('Token validation error:', error);
+      return false;
+    }
+  };
+
+  const clearAuthData = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    delete axios.defaults.headers.common['Authorization'];
+  };
 
   const login = async (credentials) => {
     try {
       dispatch({ type: 'LOGIN_START' });
       const response = await authService.login(credentials);
+      
+      // Veri tutarlılığını sağla
+      const { token, user } = response;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role);
+      
+      // Axios header'ına token ekle
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       dispatch({ type: 'LOGIN_SUCCESS', payload: response });
       return response;
     } catch (error) {
-      dispatch({ type: 'LOGIN_FAILURE', payload: error.message || 'Giriş yapılırken hata oluştu' });
+      const errorMessage = error.response?.data?.message || error.message || 'Giriş yapılırken hata oluştu';
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
   };
@@ -84,20 +146,33 @@ export function AuthProvider({ children }) {
     try {
       dispatch({ type: 'LOGIN_START' });
       const response = await authService.register(userData);
+      
+      const { token, user } = response;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role);
+      
+      // Axios header'ına token ekle
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       dispatch({ type: 'LOGIN_SUCCESS', payload: response });
       return response;
     } catch (error) {
-      dispatch({ type: 'LOGIN_FAILURE', payload: error.message || 'Kayıt olurken hata oluştu' });
+      const errorMessage = error.response?.data?.message || error.message || 'Kayıt olurken hata oluştu';
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
   };
 
   const logout = async () => {
     try {
+      // Backend'e logout isteği gönder
       await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Her durumda local storage'ı temizle
+      clearAuthData();
       dispatch({ type: 'LOGOUT' });
     }
   };
@@ -117,6 +192,7 @@ export function AuthProvider({ children }) {
     logout,
     clearError,
     hasRole,
+    checkAuthStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

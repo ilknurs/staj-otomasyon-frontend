@@ -1,252 +1,159 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  List,
-  ListItem,
+// src/pages/StudentDashboard.jsx
+import React from 'react';
+import { NavLink, Routes, Route, Navigate } from 'react-router-dom';
+import { 
+  Box, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemButton, 
+  ListItemIcon, 
   ListItemText,
-  ListItemIcon,
-  AppBar,
-  Toolbar,
-  Chip,
-  LinearProgress
+  Typography,
+  useTheme
 } from '@mui/material';
 import {
-  Assignment,
-  Schedule,
-  Grade,
-  ExitToApp,
-  PlayArrow,
-  CheckCircle,
-  AccessTime
+  Person as PersonIcon,
+  CalendarToday as CalendarIcon,
+  Business as BusinessIcon,
+  Edit as EditIcon,
+  CheckCircle as CheckIcon,
+  Assessment as AssessmentIcon,
+  Notifications as NotificationIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
-const StudentDashboard = () => {
-  const [studentInfo, setStudentInfo] = useState({});
-  const [exams, setExams] = useState([]);
-  const [grades, setGrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+import DashboardLayout from '../common/DashboardLayout';
+import MyInfo from '../student/MyInfo';
+import PeriodStart from '../student/PeriodStart';
+import Preferences from '../student/Preferences';
+import DailyLogs from '../student/DailyLogs';
+import AttendanceView from '../student/AttendanceView';
+import EndPeriod from '../student/EndPeriod';
 
-  useEffect(() => {
-    fetchStudentData();
-  }, []);
 
-  const fetchStudentData = async () => {
-    try {
-      const [profileResponse, examsResponse, gradesResponse] = await Promise.all([
-        axios.get('/api/student/profile'),
-        axios.get('/api/student/exams'),
-        axios.get('/api/student/grades')
-      ]);
-      
-      setStudentInfo(profileResponse.data);
-      setExams(examsResponse.data);
-      setGrades(gradesResponse.data);
-    } catch (error) {
-      console.error('Öğrenci verileri yüklenirken hata:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    navigate('/login');
-  };
+const drawerWidth = 280;
 
-  const getExamStatusIcon = (status) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle color="success" />;
-      case 'in-progress':
-        return <PlayArrow color="primary" />;
-      default:
-        return <AccessTime color="warning" />;
-    }
-  };
+const sections = [
+  { label: 'Bilgilerim', to: 'info', icon: PersonIcon },
+  { label: 'Dönem Başı Seç', to: 'period-start', icon: CalendarIcon },
+  { label: 'Tercihlerim', to: 'preferences', icon: BusinessIcon },
+  { label: 'Eğitim Günlüğü', to: 'daily-logs', icon: EditIcon },
+  { label: 'Devam Bilgilerim', to: 'attendance', icon: CheckIcon },
+  { label: 'Not & Rapor', to: 'end-period', icon: AssessmentIcon },
+  { label: 'Bildirimler', to: 'notifications', icon: NotificationIcon },
+];
 
-  const getExamStatusText = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'Tamamlandı';
-      case 'in-progress':
-        return 'Devam Ediyor';
-      default:
-        return 'Bekliyor';
-    }
-  };
+export default function StudentDashboard() {
+  const theme = useTheme();
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <Typography>Yükleniyor...</Typography>
+  const SidebarContent = () => (
+    <Box sx={{ width: drawerWidth, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Sidebar Header */}
+      <Box
+        sx={{
+          p: 3,
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+          color: 'white',
+          textAlign: 'center'
+        }}
+      >
+        <Typography variant="h6" component="h1" sx={{ fontWeight: 600 }}>
+          Öğrenci Paneli
+        </Typography>
       </Box>
-    );
-  }
 
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Öğrenci Paneli - {studentInfo.name}
-          </Typography>
-          <Button color="inherit" onClick={handleLogout} startIcon={<ExitToApp />}>
-            Çıkış Yap
-          </Button>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {/* Öğrenci Bilgileri */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Öğrenci Bilgileri
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Ad Soyad: {studentInfo.name}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Öğrenci No: {studentInfo.studentNumber}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Bölüm: {studentInfo.department}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  E-posta: {studentInfo.email}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Genel Ortalama
-                </Typography>
-                <Typography variant="h3" color="primary" gutterBottom>
-                  {studentInfo.gpa || '0.00'}
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={(studentInfo.gpa || 0) * 25} 
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Tamamlanan Sınav
-                </Typography>
-                <Typography variant="h3" color="success.main">
-                  {exams.filter(exam => exam.status === 'completed').length}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Toplam {exams.length} sınavdan
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Sınavlar ve Notlar */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Sınavlarım
-                </Typography>
-                <List>
-                  {exams.map((exam) => (
-                    <ListItem key={exam.id} divider>
-                      <ListItemIcon>
-                        {getExamStatusIcon(exam.status)}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={exam.title}
-                        secondary={`${exam.course} - ${exam.date}`}
-                      />
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <Chip 
-                          label={getExamStatusText(exam.status)}
-                          color={exam.status === 'completed' ? 'success' : 
-                                 exam.status === 'in-progress' ? 'primary' : 'warning'}
-                          size="small"
-                        />
-                        {exam.status === 'pending' && (
-                          <Button 
-                            size="small" 
-                            variant="contained" 
-                            sx={{ mt: 1 }}
-                            onClick={() => navigate(`/exam/${exam.id}`)}
-                          >
-                            Sınava Başla
-                          </Button>
-                        )}
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Son Notlarım
-                </Typography>
-                <List>
-                  {grades.map((grade) => (
-                    <ListItem key={grade.id} divider>
-                      <ListItemIcon>
-                        <Grade color={grade.score >= 70 ? 'success' : grade.score >= 50 ? 'warning' : 'error'} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={grade.examTitle}
-                        secondary={`${grade.course} - ${grade.date}`}
-                      />
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography 
-                          variant="h6" 
-                          color={grade.score >= 70 ? 'success.main' : 
-                                 grade.score >= 50 ? 'warning.main' : 'error.main'}
-                        >
-                          {grade.score}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          / 100
-                        </Typography>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
+      {/* Navigation List */}
+      <List sx={{ flex: 1, p: 1 }}>
+        {sections.map(({ label, to, icon: Icon }) => (
+          <ListItem key={to} disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton
+              component={NavLink}
+              to={`./${to}`}
+              sx={{
+                borderRadius: 2,
+                mx: 1,
+                py: 1.5,
+                '&.active': {
+                  backgroundColor: theme.palette.primary.main,
+                  color: 'white',
+                  '& .MuiListItemIcon-root': {
+                    color: 'white',
+                  },
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark,
+                  }
+                },
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <Icon sx={{ fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary={label}
+                primaryTypographyProps={{
+                  fontSize: '0.9rem',
+                  fontWeight: 500
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
     </Box>
   );
-};
 
-export default StudentDashboard;
+  
+
+  return (
+    <DashboardLayout 
+      title="Öğrenci Dashboard"
+      subtitle="Staj sürecinizi buradan takip edebilirsiniz"
+    >
+      <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 200px)' }}>
+        {/* Sidebar */}
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              position: 'relative',
+              height: '100%',
+              border: 'none',
+              boxShadow: theme.shadows[2]
+            },
+          }}
+        >
+          <SidebarContent />
+        </Drawer>
+
+        {/* Main Content */}
+        <Box 
+          component="main" 
+          sx={{ 
+            flexGrow: 1, 
+            p: 3,
+            backgroundColor: theme.palette.grey[50],
+            minHeight: '100%'
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Navigate to="info" replace />} />
+            <Route path="info" element={<MyInfo />} />
+            <Route path="period-start" element={<PeriodStart />} />
+            <Route path="preferences" element={<Preferences />} />
+            <Route path="daily-logs" element={<DailyLogs />} />
+            <Route path="attendance" element={<AttendanceView />} />
+            <Route path="end-period" element={<EndPeriod />} />
+          </Routes>
+        </Box>
+      </Box>
+    </DashboardLayout>
+  );
+}
