@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/auth/Login.js';
 import StudentDashboard from './components/dashboard/StudentDashboard';
 import AdminDashboard from './components/dashboard/AdminDashboard';
+import DepartmentDashboard from './components/dashboard/DepartmentDashboard';
 import CompanyDashboard from './components/dashboard/CompanyDashboard';
 import SupervisorDashboard from './components/dashboard/SupervisorDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -118,7 +119,16 @@ function App() {
                 <ProtectedRoute requiredRole="supervisor">
                   <SupervisorDashboard />
                 </ProtectedRoute>
-              } 
+              }
+              />
+              
+            <Route 
+              path="/department/*" 
+              element={
+                <ProtectedRoute requiredRole="department">
+                  <DepartmentDashboard />
+                </ProtectedRoute>
+              }
             />
             
             {/* 404 sayfası */}

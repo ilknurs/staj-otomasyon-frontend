@@ -38,19 +38,19 @@ const Login = () => {
       let target;
       switch (user.role) {
         case 'admin':
-          target = '/admin-dashboard';
+          target = '/admin';
           break;
         case 'student':
-          target = '/student-dashboard';
+          target = '/student';
           break;
         case 'company':
-          target = '/company-dashboard';
+          target = '/company';
           break;
         case 'supervisor':
-          target = '/supervisor-dashboard';
+          target = '/supervisor';
           break;
         case 'department':
-          target = '/department-dashboard';
+          target = '/department';
           break;
         default:
           throw new Error('Geçersiz kullanıcı rolü');
@@ -58,6 +58,11 @@ const Login = () => {
       
       console.log('→ Navigating to', target);
       navigate(target, { replace: true });
+
+
+      setTimeout(() => {
+      console.log('Current location after navigate:', window.location.pathname);
+    }, 100);
 
     } catch (err) {
       console.error('🚨 Login error:', err);
