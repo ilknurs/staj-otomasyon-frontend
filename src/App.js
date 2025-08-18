@@ -11,46 +11,30 @@ import DepartmentDashboard from './components/dashboard/DepartmentDashboard';
 import CompanyDashboard from './components/dashboard/CompanyDashboard';
 import SupervisorDashboard from './components/dashboard/SupervisorDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import LandingPage from './components/LandingPage.js';
+import Register from './components/auth/Register';
 
-// Axios konfigürasyonunu import et
 import './utils/axiosConfig';
 
-// Material-UI teması
+// Tema aynı kalıyor...
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
+    primary: { main: '#1976d2' },
+    secondary: { main: '#dc004e' },
+    background: { default: '#f5f5f5' },
   },
   typography: {
     fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
+      '-apple-system','BlinkMacSystemFont','"Segoe UI"',
+      'Roboto','"Helvetica Neue"','Arial','sans-serif',
     ].join(','),
   },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
+    MuiButton: { styleOverrides: { root: { textTransform: 'none' } } },
   },
 });
 
-// Dashboard yönlendirme komponenti
+// Kullanıcıya göre yönlendirme
 function DashboardRedirect() {
   const { user } = useAuth();
   
@@ -59,16 +43,12 @@ function DashboardRedirect() {
   }
 
   switch (user.role) {
-    case 'student':
-      return <Navigate to="/student" replace />;
-    case 'admin':
-      return <Navigate to="/admin" replace />;
-    case 'company':
-      return <Navigate to="/company" replace />;
-    case 'supervisor':
-      return <Navigate to="/supervisor" replace />;
-    default:
-      return <Navigate to="/login" replace />;
+    case 'student': return <Navigate to="/student" replace />;
+    case 'admin': return <Navigate to="/admin" replace />;
+    case 'company': return <Navigate to="/company" replace />;
+    case 'supervisor': return <Navigate to="/supervisor" replace />;
+    case 'department': return <Navigate to="/department" replace />;
+    default: return <Navigate to="/login" replace />;
   }
 }
 
@@ -79,11 +59,15 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            {/* Ana sayfa - Dashboard'a yönlendirme */}
-            <Route path="/" element={<DashboardRedirect />} />
+            {/* Ana sayfa -> LandingPage */}
+            <Route path="/" element={<LandingPage />} />
+
+            {/* Dashboard redirect için ayrı path */}
+            <Route path="/dashboard" element={<DashboardRedirect />} />
             
-            {/* Login sayfası */}
+            {/* Auth sayfaları */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             
             {/* Korumalı rotalar */}
             <Route 
@@ -94,7 +78,6 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
             <Route 
               path="/admin/*" 
               element={
@@ -103,7 +86,6 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
             <Route 
               path="/company/*" 
               element={
@@ -112,7 +94,6 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
             <Route 
               path="/supervisor/*" 
               element={
@@ -120,8 +101,7 @@ function App() {
                   <SupervisorDashboard />
                 </ProtectedRoute>
               }
-              />
-              
+            />
             <Route 
               path="/department/*" 
               element={
@@ -131,7 +111,7 @@ function App() {
               }
             />
             
-            {/* 404 sayfası */}
+            {/* 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
