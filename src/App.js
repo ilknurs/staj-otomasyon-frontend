@@ -112,34 +112,21 @@ function App() {
               }
             />
             <Route
-              path="/supervisor/*"
+              path="/supervisor"
               element={
                 <ProtectedRoute requiredRole="supervisor">
                   <SupervisorDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route path="students" element={<SupervisorStudents />} />
+              <Route path="approvals" element={<SupervisorApprovals />} />
+            </Route>
             <Route
               path="/department/*"
               element={
                 <ProtectedRoute requiredRole="department">
                   <DepartmentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/supervisor/students"
-              element={
-                <ProtectedRoute requiredRole="supervisor">
-                  <SupervisorStudents />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/supervisor/approvals"
-              element={
-                <ProtectedRoute requiredRole="supervisor">
-                  <SupervisorApprovals />
                 </ProtectedRoute>
               }
             />
