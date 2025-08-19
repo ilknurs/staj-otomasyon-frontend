@@ -36,7 +36,16 @@ const SupervisorDashboard = () => {
         <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
           <h3>Öğrenci Takibi</h3>
           <p>Danışmanlığını yaptığınız öğrencileri görüntüleyin</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
+          <button
+            onClick={() => navigate('/supervisor/students')}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+            }}
+          >
             Öğrencileri Görüntüle
           </button>
         </div>
@@ -44,10 +53,19 @@ const SupervisorDashboard = () => {
         <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
           <h3>Staj Onayları</h3>
           <p>Öğrenci staj başvurularını onaylayın</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
-            Onay Bekleyenler
-          </button>
-        </div>
+          <button
+  onClick={() => navigate('/supervisor/approvals')}
+  style={{
+    padding: '10px 20px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px'
+  }}
+>
+  Onay Bekleyenler
+</button>
+</div>
 
         <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
           <h3>Staj Defterleri</h3>
