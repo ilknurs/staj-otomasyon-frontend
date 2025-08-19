@@ -10,7 +10,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/auth/Login.js";
-import StudentDashboard from "./components/dashboard/StudentDashboard";
+import StudentDashboard from "./components/student/StudentDashboard.js";
 import AdminDashboard from "./components/dashboard/AdminDashboard";
 import DepartmentDashboard from "./components/dashboard/DepartmentDashboard";
 import CompanyDashboard from "./components/dashboard/CompanyDashboard";

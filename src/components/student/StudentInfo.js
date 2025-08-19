@@ -81,10 +81,8 @@ export default function StudentInfo({ studentData = {}, onUpdate }) {
       { key: 'alan8', label: 'UI/UX Deneyimi', type: 'text' },
       { key: 'alan9', label: 'Test Yazma', type: 'text' },
       { key: 'alan10', label: 'API Geliştirme', type: 'text' },
-      // ... diğer 26 alan da benzer şekilde tanımlanabilir
       { key: 'alan11', label: 'Machine Learning', type: 'text' },
       { key: 'alan12', label: 'Data Analysis', type: 'text' },
-      // ... alan36'ya kadar devam eder
       { key: 'alan36', label: 'Diğer Yetenekler', type: 'textarea' },
     ]}
   ];
