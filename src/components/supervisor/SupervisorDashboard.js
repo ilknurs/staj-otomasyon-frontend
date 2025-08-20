@@ -1,13 +1,31 @@
-// src/components/SupervisorDashboard.js
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/components/supervisor/SupervisorDashboard.js
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, Outlet } from "react-router-dom";
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  AppBar,
+  Toolbar,
+} from "@mui/material";
+import {
+  Person,
+  CheckCircle,
+  Book,
+  Assignment,
+  BarChart,
+  Logout,
+} from "@mui/icons-material";
 
 const SupervisorDashboard = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userString = localStorage.getItem('user');
+    const userString = localStorage.getItem("user");
     if (userString) {
       setUser(JSON.parse(userString));
     }
@@ -15,83 +33,126 @@ const SupervisorDashboard = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
+    navigate("/login");
   };
 
+  // Menü kartları
+  const panels = [
+    {
+      title: "Öğrenci Takibi",
+      desc: "Danışmanlığını yaptığınız öğrencileri görüntüleyin",
+      icon: <Person fontSize="large" color="primary" />,
+      button: "Öğrencileri Görüntüle",
+      color: "primary",
+      link: "students",
+    },
+    {
+      title: "Staj Onayları",
+      desc: "Öğrenci staj başvurularını onaylayın",
+      icon: <CheckCircle fontSize="large" color="success" />,
+      button: "Onay Bekleyenler",
+      color: "success",
+      link: "approvals",
+    },
+    {
+      title: "Staj Defterleri",
+      desc: "Öğrenci staj defterlerini inceleyin",
+      icon: <Book fontSize="large" color="info" />,
+      button: "Defterleri İncele",
+      color: "info",
+      link: "notebooks",
+    },
+    {
+      title: "Değerlendirmeler",
+      desc: "Öğrenci değerlendirmelerini yapın",
+      icon: <Assignment fontSize="large" color="warning" />,
+      button: "Değerlendirme Yap",
+      color: "warning",
+      link: "evaluations",
+    },
+    {
+      title: "Raporlar",
+      desc: "Staj süreç raporlarını görüntüleyin",
+      icon: <BarChart fontSize="large" color="secondary" />,
+      button: "Raporları Görüntüle",
+      color: "secondary",
+      link: "reports",
+    },
+  ];
+
   return (
-    <div style={{ padding: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1>Danışman Paneli</h1>
-        <div>
-          <span style={{ marginRight: '15px' }}>
-            Hoş geldiniz, {user?.name} {user?.surname}
-          </span>
-          <button onClick={handleLogout} style={{ padding: '8px 16px' }}>
-            Çıkış Yap
-          </button>
-        </div>
-      </header>
+    <Box sx={{ flexGrow: 1 }}>
+      {/* Üst Bar */}
+      <AppBar position="static" sx={{ mb: 3 }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="h6">Danışman Paneli</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography>
+              Hoş geldiniz, {user?.name} {user?.surname}
+            </Typography>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleLogout}
+              startIcon={<Logout />}
+            >
+              Çıkış Yap
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
-          <h3>Öğrenci Takibi</h3>
-          <p>Danışmanlığını yaptığınız öğrencileri görüntüleyin</p>
-          <button
-            onClick={() => navigate('/supervisor/students')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-            }}
-          >
-            Öğrencileri Görüntüle
-          </button>
-        </div>
+      {/* Sayfa düzeni: solda menü kartları, sağda alt sayfalar */}
+      <Grid container spacing={3} sx={{ px: 3 }}>
+        {/* Sol Menü Kartları */}
+        <Grid item xs={12} md={4}>
+          <Grid container spacing={2}>
+            {panels.map((panel, index) => (
+              <Grid item xs={12} key={index}>
+                <Card
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: 3,
+                    borderRadius: 3,
+                  }}
+                >
+                  <CardContent sx={{ textAlign: "center" }}>
+                    {panel.icon}
+                    <Typography variant="h6" gutterBottom>
+                      {panel.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      {panel.desc}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color={panel.color}
+                      component={Link}
+                      to={panel.link}
+                      fullWidth
+                    >
+                      {panel.button}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
 
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
-          <h3>Staj Onayları</h3>
-          <p>Öğrenci staj başvurularını onaylayın</p>
-          <button
-  onClick={() => navigate('/supervisor/approvals')}
-  style={{
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px'
-  }}
->
-  Onay Bekleyenler
-</button>
-</div>
-
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
-          <h3>Staj Defterleri</h3>
-          <p>Öğrenci staj defterlerini inceleyin</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px' }}>
-            Defterleri İncele
-          </button>
-        </div>
-
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
-          <h3>Değerlendirmeler</h3>
-          <p>Öğrenci değerlendirmelerini yapın</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#ffc107', color: 'black', border: 'none', borderRadius: '4px' }}>
-            Değerlendirme Yap
-          </button>
-        </div>
-
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
-          <h3>Raporlar</h3>
-          <p>Staj süreç raporlarını görüntüleyin</p>
-          <button style={{ padding: '10px 20px', backgroundColor: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px' }}>
-            Raporları Görüntüle
-          </button>
-        </div>
-      </div>
-    </div>
+        {/* Sağ İçerik */}
+        <Grid item xs={12} md={8}>
+          <Outlet />
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 

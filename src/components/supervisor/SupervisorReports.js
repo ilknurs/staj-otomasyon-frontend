@@ -1,3 +1,4 @@
+// src/components/supervisor/SupervisorReports.js
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -13,45 +14,31 @@ import {
   Alert,
 } from "@mui/material";
 
-function SupervisorStudents() {
-  const [students, setStudents] = useState([]);
+function SupervisorReports() {
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("📌 Token:", token);
 
-    if (!token) {
-      setError("Token bulunamadı, lütfen tekrar giriş yapın.");
-      setLoading(false);
-      return;
-    }
-
-    fetch("http://localhost:5000/api/supervisor/my-students", {
+    fetch("http://localhost:5000/api/supervisor/reports", {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => {
-        console.log("📌 Backend Response Status:", res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        console.log("📌 Gelen Data:", data);
         if (data.success) {
-          setStudents(data.data);
+          setReports(data.data);
         } else {
-          setError(data.message || "Öğrenciler alınırken bir sorun oluştu.");
+          setError("Raporlar alınırken hata oluştu.");
         }
         setLoading(false);
       })
       .catch((err) => {
-        console.error("📌 Fetch Error:", err);
+        console.error(err);
         setError("Sunucuya bağlanırken hata oluştu.");
         setLoading(false);
       });
@@ -69,11 +56,11 @@ function SupervisorStudents() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Danışmanlık Yaptığınız Öğrenciler
+        Staj Raporları
       </Typography>
 
-      {students.length === 0 ? (
-        <Alert severity="info">Henüz öğrenciniz bulunmamaktadır.</Alert>
+      {reports.length === 0 ? (
+        <Alert severity="info">Henüz rapor bulunmamaktadır.</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -81,19 +68,17 @@ function SupervisorStudents() {
               <TableRow>
                 <TableCell><b>Ad Soyad</b></TableCell>
                 <TableCell><b>Email</b></TableCell>
-                <TableCell><b>Bölüm</b></TableCell>
-                <TableCell><b>Numara</b></TableCell>
-                <TableCell><b>Durum</b></TableCell>
+                <TableCell><b>Rapor Başlığı</b></TableCell>
+                <TableCell><b>Tarih</b></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {students.map((s) => (
-                <TableRow key={s._id}>
-                  <TableCell>{s.name} {s.surname}</TableCell>
-                  <TableCell>{s.email}</TableCell>
-                  <TableCell>{s.department || "-"}</TableCell>
-                  <TableCell>{s.studentNumber || "-"}</TableCell>
-                  <TableCell>{s.status || "Aktif"}</TableCell>
+              {reports.map((r) => (
+                <TableRow key={r._id}>
+                  <TableCell>{r.student?.name} {r.student?.surname}</TableCell>
+                  <TableCell>{r.student?.email}</TableCell>
+                  <TableCell>{r.title}</TableCell>
+                  <TableCell>{r.createdAt?.slice(0,10)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -104,4 +89,4 @@ function SupervisorStudents() {
   );
 }
 
-export default SupervisorStudents;
+export default SupervisorReports;

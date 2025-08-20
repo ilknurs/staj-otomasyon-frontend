@@ -11,51 +11,42 @@ import {
   TableRow,
   Paper,
   Alert,
+  Button,
 } from "@mui/material";
 
-function SupervisorStudents() {
-  const [students, setStudents] = useState([]);
+function SupervisorNotebooks() {
+  const [notebooks, setNotebooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    fetchNotebooks();
+  }, []);
+
+  const fetchNotebooks = () => {
     const token = localStorage.getItem("token");
-    console.log("📌 Token:", token);
 
-    if (!token) {
-      setError("Token bulunamadı, lütfen tekrar giriş yapın.");
-      setLoading(false);
-      return;
-    }
-
-    fetch("http://localhost:5000/api/supervisor/my-students", {
+    fetch("http://localhost:5000/api/supervisor/notebooks", {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => {
-        console.log("📌 Backend Response Status:", res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        console.log("📌 Gelen Data:", data);
         if (data.success) {
-          setStudents(data.data);
+          setNotebooks(data.data);
         } else {
-          setError(data.message || "Öğrenciler alınırken bir sorun oluştu.");
+          setError("Defterler alınırken bir sorun oluştu.");
         }
         setLoading(false);
       })
       .catch((err) => {
-        console.error("📌 Fetch Error:", err);
+        console.error(err);
         setError("Sunucuya bağlanırken hata oluştu.");
         setLoading(false);
       });
-  }, []);
+  };
 
   if (loading)
     return (
@@ -69,11 +60,11 @@ function SupervisorStudents() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Danışmanlık Yaptığınız Öğrenciler
+        Staj Defterleri
       </Typography>
 
-      {students.length === 0 ? (
-        <Alert severity="info">Henüz öğrenciniz bulunmamaktadır.</Alert>
+      {notebooks.length === 0 ? (
+        <Alert severity="info">Henüz yüklenmiş defter bulunmamaktadır.</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table>
@@ -81,19 +72,28 @@ function SupervisorStudents() {
               <TableRow>
                 <TableCell><b>Ad Soyad</b></TableCell>
                 <TableCell><b>Email</b></TableCell>
-                <TableCell><b>Bölüm</b></TableCell>
-                <TableCell><b>Numara</b></TableCell>
-                <TableCell><b>Durum</b></TableCell>
+                <TableCell><b>Defter Linki</b></TableCell>
+                <TableCell><b>Yüklenme Tarihi</b></TableCell>
+                <TableCell align="center"><b>İşlem</b></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {students.map((s) => (
-                <TableRow key={s._id}>
-                  <TableCell>{s.name} {s.surname}</TableCell>
-                  <TableCell>{s.email}</TableCell>
-                  <TableCell>{s.department || "-"}</TableCell>
-                  <TableCell>{s.studentNumber || "-"}</TableCell>
-                  <TableCell>{s.status || "Aktif"}</TableCell>
+              {notebooks.map((n) => (
+                <TableRow key={n._id}>
+                  <TableCell>{n.student?.name} {n.student?.surname}</TableCell>
+                  <TableCell>{n.student?.email}</TableCell>
+                  <TableCell>{n.fileName || "Dosya"}</TableCell>
+                  <TableCell>{n.uploadDate?.slice(0, 10)}</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="info"
+                      size="small"
+                      onClick={() => window.open(n.fileUrl, "_blank")}
+                    >
+                      İncele
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -104,4 +104,4 @@ function SupervisorStudents() {
   );
 }
 
-export default SupervisorStudents;
+export default SupervisorNotebooks;

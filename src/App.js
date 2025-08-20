@@ -9,17 +9,24 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Login from "./components/auth/Login.js";
-import StudentDashboard from "./components/student/StudentDashboard.js";
+
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import LandingPage from "./components/LandingPage";
+
+import StudentDashboard from "./components/student/StudentDashboard";
 import AdminDashboard from "./components/dashboard/AdminDashboard";
 import DepartmentDashboard from "./components/dashboard/DepartmentDashboard";
 import CompanyDashboard from "./components/dashboard/CompanyDashboard";
 import SupervisorDashboard from "./components/supervisor/SupervisorDashboard";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import LandingPage from "./components/LandingPage.js";
-import Register from "./components/auth/Register";
-import SupervisorStudents from "./components/supervisor/SupervisorDashboard";
+
+import SupervisorStudents from "./components/supervisor/supervisorStudents";
 import SupervisorApprovals from "./components/supervisor/SupervisorApprovals";
+import SupervisorNotebooks from "./components/supervisor/SupervisorNotebook";
+import SupervisorReports from "./components/supervisor/SupervisorReports";
+import SupervisorEvaluations from "./components/supervisor/SupervisorEvaluations";  
+
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 import "./utils/axiosConfig";
 
@@ -76,10 +83,10 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            {/* Ana sayfa -> LandingPage */}
+            {/* Ana sayfa */}
             <Route path="/" element={<LandingPage />} />
 
-            {/* Dashboard redirect için ayrı path */}
+            {/* Dashboard yönlendirme */}
             <Route path="/dashboard" element={<DashboardRedirect />} />
 
             {/* Auth sayfaları */}
@@ -111,6 +118,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Supervisor nested routes */}
             <Route
               path="/supervisor"
               element={
@@ -121,7 +130,10 @@ function App() {
             >
               <Route path="students" element={<SupervisorStudents />} />
               <Route path="approvals" element={<SupervisorApprovals />} />
+              <Route path="notebooks" element={<SupervisorNotebooks />} />
+              {/* ileride evaluations, reports eklenecek */}
             </Route>
+
             <Route
               path="/department/*"
               element={
@@ -131,7 +143,7 @@ function App() {
               }
             />
 
-            {/* 404 */}
+            {/* 404 yönlendirmesi */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
