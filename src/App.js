@@ -15,6 +15,10 @@ import Register from "./components/auth/Register";
 import LandingPage from "./components/LandingPage";
 
 import StudentDashboard from "./components/student/StudentDashboard";
+import StudentInfo from "./components/student/StudentInfo";
+import DailyLogs from "./components/student/DailyLogs";
+
+
 import AdminDashboard from "./components/dashboard/AdminDashboard";
 import DepartmentDashboard from "./components/dashboard/DepartmentDashboard";
 import CompanyDashboard from "./components/dashboard/CompanyDashboard";
@@ -76,6 +80,12 @@ function DashboardRedirect() {
   }
 }
 
+const students = [
+  {path:"/",Component:StudentDashboard},
+  {path:"/info",Component:StudentInfo},
+  {path:"/logs",Component:DailyLogs}
+]
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -94,14 +104,21 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* Korumalı rotalar */}
-            <Route
-              path="/student/*"
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <StudentDashboard />
-                </ProtectedRoute>
-              }
-            />
+            
+             { 
+             students.map(({path,Component}, index) => (
+                <Route
+                  key={index}
+                  path={`/student${path}/*`}
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <Component />
+                    </ProtectedRoute>
+                  }
+                />
+              ))
+            }
+          
             <Route
               path="/admin/*"
               element={

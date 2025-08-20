@@ -15,8 +15,11 @@ import {
   Favorite,
   CloudUpload,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
+const navigate = useNavigate()
+
   return (
     <div>
       {/* Üst Bar */}
@@ -57,6 +60,7 @@ export default function StudentDashboard() {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#1976d2" }}
+                onClick={()=>{navigate("/student/info")}}
               >
                 Bilgilerimi Gör
               </Button>
@@ -78,6 +82,7 @@ export default function StudentDashboard() {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#2e7d32" }}
+                onClick={()=>{navigate("/student/logs")}}
               >
                 Devamı Görüntüle
               </Button>
