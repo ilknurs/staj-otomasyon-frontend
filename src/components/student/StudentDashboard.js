@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";   
+import axios from "axios";                            
 import {
   AppBar,
   Toolbar,
@@ -7,6 +8,9 @@ import {
   Grid,
   Card,
   CardContent,
+  List,            
+  ListItem,        
+  ListItemText,    
 } from "@mui/material";
 import {
   Person,
@@ -19,6 +23,42 @@ import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
 const navigate = useNavigate()
+
+const studentId = "1234567890abcdef"; // TODO: giriş yapan öğrenciden al
+const [file, setFile] = useState(null);
+const [uploading, setUploading] = useState(false);
+const [files, setFiles] = useState([]);
+
+useEffect(() => {
+  axios
+    .get(`/api/files?studentId=${studentId}`)
+    .then((res) => setFiles(res.data))
+    .catch((err) => console.error("Dosyalar alınamadı:", err));
+}, [studentId]);
+
+const handleUpload = async () => {
+  if (!file) return alert("Lütfen bir dosya seçin!");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("studentId", studentId);
+
+  try {
+    setUploading(true);
+    await axios.post("/api/files/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    alert("Dosya başarıyla yüklendi!");
+    // Listeyi yenile
+    const res = await axios.get(`/api/files?studentId=${studentId}`);
+    setFiles(res.data);
+  } catch (err) {
+    console.error("Yükleme hatası:", err);
+    alert("Dosya yüklenirken hata oluştu.");
+  } finally {
+    setUploading(false);
+    setFile(null);
+  }
+};
 
   return (
     <div>
@@ -143,12 +183,47 @@ const navigate = useNavigate()
               <Typography variant="body2" color="text.secondary">
                 Staj belgelerini yükle veya görüntüle
               </Typography>
+
+              {/* Dosya seçme */}
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files[0])}
+                style={{ marginTop: "10px" }}
+              />
+
+              {/* Yükle butonu */}
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#c2185b" }}
+                onClick={handleUpload}
+                disabled={uploading}
               >
-                Belgeleri Aç
+                {uploading ? "Yükleniyor..." : "Belge Yükle"}
               </Button>
+
+              {/* Yüklenen belgeleri listele */}
+              <List sx={{ mt: 2, textAlign: "left" }}>
+                {files.map((f) => (
+                  <ListItem key={f._id} divider>
+                    <ListItemText
+                      primary={f.fileName}
+                      secondary={`Yükleme: ${new Date(
+                        f.uploadedAt
+                      ).toLocaleString()} | Boyut: ${(f.fileSize / 1024).toFixed(
+                        1
+                      )} KB`}
+                    />
+                    <Button
+                      href={f.filePath}
+                      target="_blank"
+                      variant="outlined"
+                      size="small"
+                    >
+                      Görüntüle
+                    </Button>
+                  </ListItem>
+                ))}
+              </List>
             </CardContent>
           </Card>
         </Grid>
