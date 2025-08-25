@@ -36,6 +36,19 @@ useEffect(() => {
     .catch((err) => console.error("Dosyalar alınamadı:", err));
 }, [studentId]);
 
+const handleLogout = () => {
+  // localStorage temizle
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  // Gerekirse AuthContext'teki user state'ini sıfırla
+  // setUser(null); (eğer context kullanıyorsan)
+
+  // Login sayfasına yönlendir
+  navigate("/login", { replace: true });
+};
+
+
 const handleUpload = async () => {
   if (!file) return alert("Lütfen bir dosya seçin!");
   const formData = new FormData();
@@ -77,6 +90,7 @@ const handleUpload = async () => {
               color="error"
               startIcon={<Person />}
               sx={{ backgroundColor: "#d32f2f" }}
+              onClick={handleLogout} // ✅ logout ekledik
             >
               Çıkış Yap
             </Button>
@@ -100,7 +114,9 @@ const handleUpload = async () => {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#1976d2" }}
-                onClick={()=>{navigate("/student/info")}}
+                onClick={() => {
+                  navigate("/student/info");
+                }}
               >
                 Bilgilerimi Gör
               </Button>
@@ -122,7 +138,9 @@ const handleUpload = async () => {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#2e7d32" }}
-                onClick={()=>{navigate("/student/logs")}}
+                onClick={() => {
+                  navigate("/student/logs");
+                }}
               >
                 Devamı Görüntüle
               </Button>
@@ -209,9 +227,9 @@ const handleUpload = async () => {
                       primary={f.fileName}
                       secondary={`Yükleme: ${new Date(
                         f.uploadedAt
-                      ).toLocaleString()} | Boyut: ${(f.fileSize / 1024).toFixed(
-                        1
-                      )} KB`}
+                      ).toLocaleString()} | Boyut: ${(
+                        f.fileSize / 1024
+                      ).toFixed(1)} KB`}
                     />
                     <Button
                       href={f.filePath}
