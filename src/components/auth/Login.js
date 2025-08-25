@@ -33,7 +33,7 @@ const Login = () => {
       console.log('✅ Login successful:', response);
 
       const { user } = response;
-      
+
       // Role'a göre yönlendir
       let target;
       switch (user.role) {
@@ -59,14 +59,19 @@ const Login = () => {
       console.log('→ Navigating to', target);
       navigate(target, { replace: true });
 
-
       setTimeout(() => {
-      console.log('Current location after navigate:', window.location.pathname);
-    }, 100);
+        console.log('Current location after navigate:', window.location.pathname);
+      }, 100);
 
     } catch (err) {
       console.error('🚨 Login error:', err);
-      setError(err.message || 'Giriş yapılırken hata oluştu');
+
+      // Backend’ten gelen hata varsa göster
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(err.message || 'Giriş yapılırken hata oluştu');
+      }
     } finally {
       setLoading(false);
     }

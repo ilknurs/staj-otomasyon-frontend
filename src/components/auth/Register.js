@@ -1,136 +1,95 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  MenuItem,
-  Container,
-  Link as MuiLink
-} from '@mui/material';
-import { useNavigate, Link } from 'react-router-dom';
-import api from '../../services/api';
-
-const roleOptions = [
-  { value: 'student',    label: 'Öğrenci'    },
-  { value: 'company',    label: 'Şirket'     },
-  { value: 'supervisor', label: 'Danışman'   },
-  { value: 'department', label: 'Bölüm'      },
-];
+import React, { useState } from "react";
+import axios from "axios";
+import { TextField, Button, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    name: '', surname: '', email: '', password: '', role: 'student'
+  const [form, setForm] = useState({
+    name: "",
+    surname: "",
+    email: "",
+    password: ""
   });
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate              = useNavigate();
+  const [code, setCode] = useState("");
+  const [message, setMessage] = useState("");
+  const [step, setStep] = useState("register"); // register | verify
+  const navigate = useNavigate();
 
-  const handleChange = e => {
-    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  // Kayıt işlemi
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+
+    if (!form.email.toLowerCase().endsWith("@firat.edu.tr")) {
+      setMessage("Sadece @firat.edu.tr uzantılı mail ile kayıt olabilirsiniz.");
+      return;
+    }
 
     try {
-      const { data } = await api.post('/auth/register', formData);
-      console.log('↪️ Register response:', data);
-      // Kayıt başarılıysa login sayfasına yönlendir
-      navigate('/login', { replace: true });
+      const res = await axios.post("http://localhost:5000/api/auth/register", form);
+      setMessage(res.data.message || "Mailinize doğrulama kodu gönderildi.");
+      setStep("verify");
     } catch (err) {
-      console.error('🚨 Register error:', err);
-      setError(err.response?.data?.message || err.message);
-    } finally {
-      setLoading(false);
+      console.error("Register error:", err.response?.data || err.message);
+      setMessage(err.response?.data?.message || "Kayıt sırasında hata oluştu.");
+    }
+  };
+
+  // Kod doğrulama
+  const handleVerify = async () => {
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/verify", {
+        email: form.email,
+        code
+      });
+      setMessage(res.data.message);
+      if (res.data.success) {
+        setTimeout(() => navigate("/login"), 1500); // 1.5sn sonra login sayfasına yönlendir
+      }
+    } catch (err) {
+      console.error("Verify error:", err.response?.data || err.message);
+      setMessage(err.response?.data?.message || "Doğrulama hatası");
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Card sx={{ width: '100%', mt: 3 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography component="h1" variant="h4" align="center" gutterBottom>
-              Hesap Oluştur
-            </Typography>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 5 }}>
+      <Typography variant="h5" gutterBottom>
+        {step === "register" ? "Kayıt Ol" : "Doğrulama"}
+      </Typography>
 
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {step === "register" && (
+        <form onSubmit={handleRegister}>
+          <TextField fullWidth margin="normal" label="Ad" name="name" onChange={handleChange} />
+          <TextField fullWidth margin="normal" label="Soyad" name="surname" onChange={handleChange} />
+          <TextField fullWidth margin="normal" label="E-posta" name="email" onChange={handleChange} />
+          <TextField fullWidth margin="normal" type="password" label="Şifre" name="password" onChange={handleChange} />
+          <Button type="submit" variant="contained" color="primary" fullWidth>
+            Kayıt Ol
+          </Button>
+        </form>
+      )}
 
-            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-              <TextField
-                margin="normal"
-                required fullWidth
-                id="name" name="name"
-                label="Ad"
-                value={formData.name}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required fullWidth
-                id="surname" name="surname"
-                label="Soyad"
-                value={formData.surname}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required fullWidth
-                id="email" name="email"
-                label="E-posta Adresi"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required fullWidth
-                id="password" name="password"
-                label="Şifre"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                select fullWidth
-                id="role" name="role"
-                label="Rol"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                {roleOptions.map(opt => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+      {step === "verify" && (
+        <Box>
+          <Typography>{form.email} adresine gelen kodu giriniz:</Typography>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Doğrulama Kodu"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <Button variant="contained" color="primary" fullWidth onClick={handleVerify}>
+            Doğrula
+          </Button>
+        </Box>
+      )}
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                disabled={loading}
-              >
-                {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
-              </Button>
-
-              <Box textAlign="center">
-                <MuiLink component={Link} to="/login" variant="body2">
-                  Zaten hesabın var mı? Giriş yap
-                </MuiLink>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    </Container>
+      {message && <Typography color="secondary" sx={{ mt: 2 }}>{message}</Typography>}
+    </Box>
   );
 }
