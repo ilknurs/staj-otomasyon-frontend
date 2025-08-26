@@ -162,6 +162,9 @@ const handleUpload = async () => {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#0288d1" }}
+                onClick={() => {
+                  navigate("/student/daily-logs");
+                }}
               >
                 Günlüğü Aç
               </Button>
@@ -183,6 +186,9 @@ const handleUpload = async () => {
               <Button
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#ef6c00" }}
+                onClick={() => {
+                  navigate("/student/preferences");
+                }}
               >
                 Ayarları Aç
               </Button>

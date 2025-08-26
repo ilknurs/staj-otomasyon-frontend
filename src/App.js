@@ -17,6 +17,7 @@ import LandingPage from "./components/LandingPage";
 import StudentDashboard from "./components/student/StudentDashboard";
 import StudentInfo from "./components/student/StudentInfo";
 import DailyLogs from "./components/student/DailyLogs";
+import Preferences from "./components/student/Preferences";
 
 
 import AdminDashboard from "./components/dashboard/AdminDashboard";
@@ -83,7 +84,8 @@ function DashboardRedirect() {
 const students = [
   {path:"/",Component:StudentDashboard},
   {path:"/info",Component:StudentInfo},
-  {path:"/logs",Component:DailyLogs}
+  {path:"/logs",Component:DailyLogs},
+  {path:"/preferences", Component: Preferences}
 ]
 
 function App() {
@@ -148,7 +150,8 @@ function App() {
               <Route path="students" element={<SupervisorStudents />} />
               <Route path="approvals" element={<SupervisorApprovals />} />
               <Route path="notebooks" element={<SupervisorNotebooks />} />
-              {/* ileride evaluations, reports eklenecek */}
+              <Route path="preferences" element={<Preferences />} />
+
             </Route>
 
             <Route
