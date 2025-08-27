@@ -1,8 +1,9 @@
 import React from "react";
-import { Box, Card, CardContent, Typography, Button, Container } from "@mui/material";
+import { Box, Card, CardContent, Typography, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import logo from "../assets/firat-logo.png";
 
 export default function LandingPage() {
   const actionButtonSx = {
@@ -25,64 +26,67 @@ export default function LandingPage() {
   };
 
   return (
-    <Container
-      maxWidth="sm"
+    <Box
       sx={{
+        minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
+        backgroundColor: "#7B1E3A" // ✅ sabit bordo arka plan
       }}
     >
       <Card
         sx={{
           width: "100%",
-          boxShadow: 6,
+          maxWidth: 500,
+          p: 3,
           borderRadius: 3,
           textAlign: "center",
-          p: 3,
+          backgroundColor: "#F9EAEA", // ✅ bordoya uygun açık ton
+          color: "#4B1C1C",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)"
         }}
       >
         <CardContent>
+          {/* Logo */}
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <img
+              src={logo}
+              alt="Fırat Üniversitesi Logo"
+              style={{ width: "80px", height: "80px" }}
+            />
+          </Box>
+
+          {/* Başlık */}
+          <Typography variant="h5" sx={{ fontWeight: "bold", color: "#791734ff" }}>
+            Fırat Üniversitesi
+          </Typography>
           <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            sx={{ fontWeight: "bold", color: "primary.main" }}
+            variant="h6"
+            sx={{ fontWeight: "medium", color: "#4B1C1C", mb: 2 }}
           >
-            Staj Otomasyon Sistemine Hoşgeldiniz
+            İş Yeri Eğitimi ve Staj Otomasyonu
           </Typography>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Devam etmek için seçim yapın
           </Typography>
 
-          <Box
-            sx={{
-              mt: 4,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-          >
+          {/* Butonlar */}
+          <Box sx={{ mt: 4, display: "flex", flexDirection: "column", gap: 2 }}>
             <Button
               component={Link}
               to="/login"
               variant="contained"
-              color="primary"
-              size="large"
               fullWidth
               startIcon={<LoginIcon />}
               sx={actionButtonSx}
             >
               Giriş Yap
             </Button>
-
             <Button
               component={Link}
               to="/register"
-              variant="contained"     // aynı stil
-              color="primary"
-              size="large"
+              variant="contained"
               fullWidth
               startIcon={<PersonAddAlt1Icon />}
               sx={actionButtonSx}
@@ -92,6 +96,6 @@ export default function LandingPage() {
           </Box>
         </CardContent>
       </Card>
-    </Container>
+    </Box>
   );
 }
